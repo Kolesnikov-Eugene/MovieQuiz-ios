@@ -28,6 +28,7 @@ final class MovieQuizViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        makeImageRoundAndCreateBorder()
         let firstQuestion = questions[currentQuestionIndex]
         let convertedData = convert(model: firstQuestion)
         show(quiz: convertedData)
@@ -82,9 +83,7 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showAnswerResult(isCorrect: Bool) {
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 1
-        imageView.layer.cornerRadius = 8
+        makeImageRoundAndCreateBorder()
         
         if isCorrect {
             imageView.layer.borderColor = UIColor.ypGreen.cgColor
@@ -116,6 +115,12 @@ final class MovieQuizViewController: UIViewController {
             show(quiz: convertedData)
             enableButtons()
         }
+    }
+    
+    private func makeImageRoundAndCreateBorder() {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 1
+        imageView.layer.cornerRadius = 8
     }
     
     private func disableButtons() {
