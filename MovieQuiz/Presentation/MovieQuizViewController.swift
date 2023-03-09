@@ -12,6 +12,7 @@ final class MovieQuizViewController: UIViewController {
     
     private var currentQuestionIndex: Int = 0
     private var correctAnswersCounter: Int = 0
+    private let defaults = UserDefaults.standard
     
     private let questions: [QuizQuestion] = [
         QuizQuestion(image: "The Godfather", text: "Рейтинг этого фильма больше чем 6?", correctAnswer: true),
@@ -103,8 +104,11 @@ final class MovieQuizViewController: UIViewController {
     
     private func showNextQuestionOrResult() {
         if currentQuestionIndex == questions.count - 1 {
+            let record = checkIfTheRecordIsHighest(correctAnswers: correctAnswersCounter)
+            let gamePlayed = increaseGamePlayedCounter()
+            let dateOfRecord = defaults.string(forKey: "DateOfRecord") ?? "current"
             let quizResult = QuizResultsViewModel(title: "Этот раунд окончен!",
-                                             text: "Ваш результат: \(correctAnswersCounter) из \(questions.count)",
+                                                  text: "Ваш результат: \(correctAnswersCounter) из \(questions.count) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)",
                                              buttonText: "Сыграть еще раз!")
             show(quiz: quizResult)
         } else {
@@ -121,6 +125,32 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 1
         imageView.layer.cornerRadius = 8
+    }
+    
+    private func checkIfTheRecordIsHighest(correctAnswers: Int) -> Int {
+        let userRecord = defaults.integer(forKey: "UserRecord")
+        if correctAnswers > userRecord {
+            defaults.set(correctAnswers, forKey: "UserRecord")
+            setDateAndTimeOfRecord()
+            return correctAnswers
+        } else {
+            return userRecord
+        }
+    }
+    
+    private func increaseGamePlayedCounter() -> Int {
+        var gamePlayed = defaults.integer(forKey: "GamePlayed")
+        gamePlayed += 1
+        defaults.set(gamePlayed, forKey: "GamePlayed")
+        return gamePlayed
+    }
+    
+    private func setDateAndTimeOfRecord() {
+        let currentDate = Date()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yyyy HH:mm"
+        let dateToString = dateFormatter.string(from: currentDate)
+        defaults.set(dateToString, forKey: "DateOfRecord")
     }
     
     private func disableButtons() {
