@@ -12,28 +12,32 @@ final class MovieQuizViewController: UIViewController {
     
     private var currentQuestionIndex: Int = 0
     private var correctAnswersCounter: Int = 0
+    private let questionAmount: Int = 10
+    private let questionFactory: QuestionFactory = QuestionFactory()
+    private var currentQuestion: QuizQuestion?
     private let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
         makeImageRoundAndCreateBorder()
-        let firstQuestion = questions[currentQuestionIndex]
-        let convertedData = convert(model: firstQuestion)
-        show(quiz: convertedData)
-        
+        if let firstQuestion = questionFactory.requestQuestion() {
+            currentQuestion = firstQuestion
+            let convertedData = convert(model: firstQuestion)
+            show(quiz: convertedData)
+        }
     }
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
         disableButtons()
         let userAnswer = false
-        let currentQuestion = questions[currentQuestionIndex]
+        guard let currentQuestion = currentQuestion else {return}
         showAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
     }
     
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
         disableButtons()
         let userAnswer = true
-        let currentQuestion = questions[currentQuestionIndex]
+        guard let currentQuestion = currentQuestion else {return}
         showAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
     }
     
@@ -54,10 +58,11 @@ final class MovieQuizViewController: UIViewController {
             self.currentQuestionIndex = 0
             self.correctAnswersCounter = 0
             
-            let currentQuestion = self.questions[self.currentQuestionIndex]
-            let convertedData = self.convert(model: currentQuestion)
-            
-            self.show(quiz: convertedData)
+            if let firstQuestion = self.questionFactory.requestQuestion() {
+                self.currentQuestion = firstQuestion
+                let convertedData = self.convert(model: firstQuestion)
+                self.show(quiz: convertedData)
+            }
         }
 
         alert.addAction(action)
@@ -68,7 +73,7 @@ final class MovieQuizViewController: UIViewController {
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(named: model.image) ?? UIImage(),
                                  question: model.text,
-                                 questionNumber: "\(currentQuestionIndex + 1)/\(questions.count)")
+                                 questionNumber: "\(currentQuestionIndex + 1)/\(questionAmount)")
     }
     
     private func showAnswerResult(isCorrect: Bool) {
@@ -93,27 +98,28 @@ final class MovieQuizViewController: UIViewController {
     }
     
     private func showNextQuestionOrResult() {
-        if currentQuestionIndex == questions.count - 1 {
+        if currentQuestionIndex == questionAmount - 1 {
             let record = checkIfTheRecordIsHighest(correctAnswers: correctAnswersCounter)
             let gamePlayed = increaseGamePlayedCounter()
             let dateOfRecord = defaults.string(forKey: "DateOfRecord") ?? "current"
             let quizResult = QuizResultsViewModel(title: "Этот раунд окончен!",
-                                                  text: "Ваш результат: \(correctAnswersCounter) из \(questions.count) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)",
-                                             buttonText: "Сыграть еще раз!")
+                                                  text: "Ваш результат: \(correctAnswersCounter) из \(questionAmount) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)",
+                                                  buttonText: "Сыграть еще раз!")
             show(quiz: quizResult)
         } else {
             currentQuestionIndex += 1
-            let currentQuestion = questions[currentQuestionIndex]
-            let convertedData = convert(model: currentQuestion)
-            
-            show(quiz: convertedData)
-            enableButtons()
+            if let nextQuestion = questionFactory.requestQuestion() {
+                currentQuestion = nextQuestion
+                let convertedData = convert(model: nextQuestion)
+                show(quiz: convertedData)
+                enableButtons()
+            }
         }
     }
     
     private func makeImageRoundAndCreateBorder() {
         imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 1
+        imageView.layer.borderWidth = 5
         imageView.layer.cornerRadius = 8
     }
     
