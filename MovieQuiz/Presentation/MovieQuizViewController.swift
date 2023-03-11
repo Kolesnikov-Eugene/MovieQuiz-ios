@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
     // MARK: - Lifecycle
     
     @IBOutlet private weak var imageView: UIImageView!
@@ -13,18 +13,34 @@ final class MovieQuizViewController: UIViewController {
     private var currentQuestionIndex: Int = 0
     private var correctAnswersCounter: Int = 0
     private let questionAmount: Int = 10
-    private let questionFactory: QuestionFactory = QuestionFactory()
+    private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
+    private var alertPresenter: AlertPresenter?
     private let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        makeImageRoundAndCreateBorder()
-        if let firstQuestion = questionFactory.requestQuestion() {
-            currentQuestion = firstQuestion
-            let convertedData = convert(model: firstQuestion)
-            show(quiz: convertedData)
+        questionFactory = QuestionFactory(delegate: self)
+        alertPresenter = AlertPresenter(delegate: self)
+        imageView.layer.cornerRadius = 8
+        questionFactory?.requestQuestion()
+    }
+    
+    // MARK: - QuestionFactoryDelegate
+    
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else {return}
+        currentQuestion = question
+        let convertedData = convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+            self?.show(quiz: convertedData)
         }
+    }
+    
+    func showQuizRezult() {
+        currentQuestionIndex = 0
+        correctAnswersCounter = 0
+        questionFactory?.requestQuestion()
     }
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
@@ -46,28 +62,6 @@ final class MovieQuizViewController: UIViewController {
         counterLabel.text = step.questionNumber
         textLabel.text = step.question
         enableButtons()
-    }
-    
-    private func show(quiz result: QuizResultsViewModel) {
-        let alert = UIAlertController(title: result.title,
-                                      message: result.text,
-                                      preferredStyle: .alert)
-
-        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let self = self else {return}
-            self.currentQuestionIndex = 0
-            self.correctAnswersCounter = 0
-            
-            if let firstQuestion = self.questionFactory.requestQuestion() {
-                self.currentQuestion = firstQuestion
-                let convertedData = self.convert(model: firstQuestion)
-                self.show(quiz: convertedData)
-            }
-        }
-
-        alert.addAction(action)
-
-        self.present(alert, animated: true, completion: nil)
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
@@ -102,18 +96,12 @@ final class MovieQuizViewController: UIViewController {
             let record = checkIfTheRecordIsHighest(correctAnswers: correctAnswersCounter)
             let gamePlayed = increaseGamePlayedCounter()
             let dateOfRecord = defaults.string(forKey: "DateOfRecord") ?? "current"
-            let quizResult = QuizResultsViewModel(title: "Этот раунд окончен!",
-                                                  text: "Ваш результат: \(correctAnswersCounter) из \(questionAmount) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)",
-                                                  buttonText: "Сыграть еще раз!")
-            show(quiz: quizResult)
+            let quizResult = AlertModel(title: "Этот раунд окончен!", message: "Ваш результат: \(correctAnswersCounter) из \(questionAmount) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)", buttonText: "Сыграть еще раз!")
+            alertPresenter?.show(quiz: quizResult)
         } else {
             currentQuestionIndex += 1
-            if let nextQuestion = questionFactory.requestQuestion() {
-                currentQuestion = nextQuestion
-                let convertedData = convert(model: nextQuestion)
-                show(quiz: convertedData)
-                enableButtons()
-            }
+            questionFactory?.requestQuestion()
+            enableButtons()
         }
     }
     
