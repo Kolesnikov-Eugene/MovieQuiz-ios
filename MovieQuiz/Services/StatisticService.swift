@@ -64,13 +64,13 @@ final class StatisticServiceImplementation: StatisticService {
         totalQuestions += result.total
         userDefaults.set(totalCorrectAnswers, forKey: Keys.correct.rawValue)
         userDefaults.set(totalQuestions, forKey: Keys.total.rawValue)
-        if theRecordIsHighest(current: result) {
+        if currentResultIsHigherThanRecord(current: result) {
             let record = GameRecord(correct: result.correct, total: result.total, date: result.date)
             gameRecord = record
         }
     }
     
-    private func theRecordIsHighest(current result: GameRecord) -> Bool {
+    private func currentResultIsHigherThanRecord(current result: GameRecord) -> Bool {
         return gameRecord.correct < result.correct
     }
     
