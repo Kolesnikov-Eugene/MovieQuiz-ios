@@ -10,17 +10,18 @@ import Foundation
 protocol StatisticService {
     func store(current result: GameRecord)
     var totalAccuracy: Double { get }
+    var totalCorrectAnswers: Int { get }
+    var totalQuestions: Int { get }
     var gamesPlayed: Int { get }
     var gameRecord: GameRecord { get }
 }
 
 final class StatisticServiceImplementation: StatisticService {
+    
     private let userDefaults = UserDefaults.standard
     var totalAccuracy: Double {
         get {
-            let totalQuestions: Double = Double(userDefaults.integer(forKey: Keys.total.rawValue))
-            let totalCorrectAnswers: Double = Double(userDefaults.integer(forKey: Keys.correct.rawValue))
-            let totalAccuracy: Double = totalCorrectAnswers / totalQuestions * 100
+            let totalAccuracy: Double = Double(totalCorrectAnswers) / Double(totalQuestions) * 100
             let accuracyToString = String(format: "%.2f", totalAccuracy)
             if let accuracy = Double(accuracyToString) {
                 return accuracy
@@ -28,6 +29,27 @@ final class StatisticServiceImplementation: StatisticService {
             return 0.0
         }
     }
+    
+    var totalCorrectAnswers: Int {
+        get {
+            let totalCorrect = userDefaults.integer(forKey: Keys.correct.rawValue)
+            return totalCorrect
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.correct.rawValue)
+        }
+    }
+    
+    var totalQuestions: Int {
+        get {
+            let totalQuestionsCount = userDefaults.integer(forKey: Keys.total.rawValue)
+            return totalQuestionsCount
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.total.rawValue)
+        }
+    }
+    
     var gamesPlayed: Int {
         get {
             let games = userDefaults.integer(forKey: Keys.gamesCount.rawValue)
@@ -37,17 +59,15 @@ final class StatisticServiceImplementation: StatisticService {
             userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
         }
     }
+    
     var gameRecord: GameRecord {
         get {
             guard let data = userDefaults.data(forKey: Keys.gameRecord.rawValue),
                   let record = try? JSONDecoder().decode(GameRecord.self, from: data) else {
                 return .init(correct: 0, total: 0, date: Date())
             }
-            
             return record
-            
         }
-        
         set {
             guard let data = try? JSONEncoder().encode(newValue) else {
                 return
@@ -57,13 +77,9 @@ final class StatisticServiceImplementation: StatisticService {
     }
     
     func store(current result: GameRecord) {
-        var totalCorrectAnswers = userDefaults.integer(forKey: Keys.correct.rawValue)
-        var totalQuestions = userDefaults.integer(forKey: Keys.total.rawValue)
+        totalCorrectAnswers += 1
+        totalQuestions += 1
         gamesPlayed += 1
-        totalCorrectAnswers += result.correct
-        totalQuestions += result.total
-        userDefaults.set(totalCorrectAnswers, forKey: Keys.correct.rawValue)
-        userDefaults.set(totalQuestions, forKey: Keys.total.rawValue)
         if currentResultIsHigherThanRecord(current: result) {
             let record = GameRecord(correct: result.correct, total: result.total, date: result.date)
             gameRecord = record
