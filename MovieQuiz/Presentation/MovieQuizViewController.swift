@@ -41,6 +41,36 @@ final class MovieQuizViewController: UIViewController {
         showAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
     }
     
+    private func makeImageRoundAndCreateBorder() {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 5
+        imageView.layer.cornerRadius = 8
+    }
+    
+    private func disableButtons() {
+        noButton.isEnabled = false
+        yesButton.isEnabled = false
+    }
+    
+    private func enableButtons() {
+        noButton.isEnabled = true
+        yesButton.isEnabled = true
+    }
+}
+
+// MARK: - QuestionFactoryDelegate
+
+extension MovieQuizViewController: QuestionFactoryDelegate {
+    
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else {return}
+        currentQuestion = question
+        let convertedData = convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+            self?.show(quiz: convertedData)
+        }
+    }
+    
     private func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         counterLabel.text = step.questionNumber
@@ -91,40 +121,12 @@ final class MovieQuizViewController: UIViewController {
             questionFactory?.requestQuestion()
         }
     }
-    
-    private func makeImageRoundAndCreateBorder() {
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 5
-        imageView.layer.cornerRadius = 8
-    }
-    
-    private func disableButtons() {
-        noButton.isEnabled = false
-        yesButton.isEnabled = false
-    }
-    
-    private func enableButtons() {
-        noButton.isEnabled = true
-        yesButton.isEnabled = true
-    }
-}
-
-// MARK: - QuestionFactoryDelegate
-
-extension MovieQuizViewController: QuestionFactoryDelegate {
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {return}
-        currentQuestion = question
-        let convertedData = convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: convertedData)
-        }
-    }
 }
 
 // MARK: - AlertPresenterDelegate
 
 extension MovieQuizViewController: AlertPresenterDelegate {
+    
     func showQuizRezult() {
         DispatchQueue.main.async { [weak self] in
             self?.currentQuestionIndex = 0
@@ -134,46 +136,6 @@ extension MovieQuizViewController: AlertPresenterDelegate {
     }
 }
 
-// MARK: - previous funcs
-//private func showNextQuestionOrResult() {
-//    if currentQuestionIndex == questionAmount - 1 {
-//        let record = checkIfTheRecordIsHighest(correctAnswers: correctAnswersCounter)
-//        let gamePlayed = increaseGamePlayedCounter()
-//        let dateOfRecord = defaults.string(forKey: "DateOfRecord") ?? "current"
-//        let quizResult = AlertModel(title: "Этот раунд окончен!", message: "Ваш результат: \(correctAnswersCounter) из \(questionAmount) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)", buttonText: "Сыграть еще раз!")
-//        alertPresenter?.show(quiz: quizResult)
-//    } else {
-//        currentQuestionIndex += 1
-//        questionFactory?.requestQuestion()
-//        enableButtons()
-//    }
-//}
-
-//private func checkIfTheRecordIsHighest(correctAnswers: Int) -> Int {
-//    let userRecord = defaults.integer(forKey: "UserRecord")
-//    if correctAnswers > userRecord {
-//        defaults.set(correctAnswers, forKey: "UserRecord")
-//        setDateAndTimeOfRecord()
-//        return correctAnswers
-//    } else {
-//        return userRecord
-//    }
-//}
-
-//private func increaseGamePlayedCounter() -> Int {
-//    var gamePlayed = defaults.integer(forKey: "GamePlayed")
-//    gamePlayed += 1
-//    defaults.set(gamePlayed, forKey: "GamePlayed")
-//    return gamePlayed
-//}
-//
-//private func setDateAndTimeOfRecord() {
-//    let currentDate = Date()
-//    let dateFormatter = DateFormatter()
-//    dateFormatter.dateFormat = "dd.MM.yyyy HH:mm"
-//    let dateToString = dateFormatter.string(from: currentDate)
-//    defaults.set(dateToString, forKey: "DateOfRecord")
-//}
 
 /*
  Mock-данные
