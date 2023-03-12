@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
+final class MovieQuizViewController: UIViewController {
     // MARK: - Lifecycle
     
     @IBOutlet private weak var imageView: UIImageView!
@@ -16,30 +16,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var alertPresenter: AlertPresenter?
-    private let defaults = UserDefaults.standard
+    private var statisticService: StatisticService?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         questionFactory = QuestionFactory(delegate: self)
         alertPresenter = AlertPresenter(delegate: self)
+        statisticService = StatisticServiceImplementation()
         imageView.layer.cornerRadius = 8
-        questionFactory?.requestQuestion()
-    }
-    
-    // MARK: - QuestionFactoryDelegate
-    
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {return}
-        currentQuestion = question
-        let convertedData = convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: convertedData)
-        }
-    }
-    
-    func showQuizRezult() {
-        currentQuestionIndex = 0
-        correctAnswersCounter = 0
         questionFactory?.requestQuestion()
     }
     
@@ -93,15 +77,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     private func showNextQuestionOrResult() {
         if currentQuestionIndex == questionAmount - 1 {
-            let record = checkIfTheRecordIsHighest(correctAnswers: correctAnswersCounter)
-            let gamePlayed = increaseGamePlayedCounter()
-            let dateOfRecord = defaults.string(forKey: "DateOfRecord") ?? "current"
-            let quizResult = AlertModel(title: "Этот раунд окончен!", message: "Ваш результат: \(correctAnswersCounter) из \(questionAmount) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)", buttonText: "Сыграть еще раз!")
+            let result = GameRecord(correct: correctAnswersCounter,
+                                    total: questionAmount,
+                                    date: Date())
+            statisticService?.store(current: result)
+            guard let record = statisticService?.gameRecord,
+                  let gamePlayed = statisticService?.gamesPlayed,
+                  let totalAccuracy = statisticService?.totalAccuracy else {return}
+            let quizResult = AlertModel(title: "Этот раунд окончен!", message: "Ваш результат: \(correctAnswersCounter) из \(questionAmount)\nКоличество сыгранных квизов: \(gamePlayed)\nРекорд: \(record.correct)/\(record.total) (\(record.date.dateTimeString)) \nCредняя точность: \(totalAccuracy)%", buttonText: "Сыграть еще раз!")
             alertPresenter?.show(quiz: quizResult)
         } else {
             currentQuestionIndex += 1
             questionFactory?.requestQuestion()
-            enableButtons()
         }
     }
     
@@ -109,32 +96,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 5
         imageView.layer.cornerRadius = 8
-    }
-    
-    private func checkIfTheRecordIsHighest(correctAnswers: Int) -> Int {
-        let userRecord = defaults.integer(forKey: "UserRecord")
-        if correctAnswers > userRecord {
-            defaults.set(correctAnswers, forKey: "UserRecord")
-            setDateAndTimeOfRecord()
-            return correctAnswers
-        } else {
-            return userRecord
-        }
-    }
-    
-    private func increaseGamePlayedCounter() -> Int {
-        var gamePlayed = defaults.integer(forKey: "GamePlayed")
-        gamePlayed += 1
-        defaults.set(gamePlayed, forKey: "GamePlayed")
-        return gamePlayed
-    }
-    
-    private func setDateAndTimeOfRecord() {
-        let currentDate = Date()
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd.MM.yyyy HH:mm"
-        let dateToString = dateFormatter.string(from: currentDate)
-        defaults.set(dateToString, forKey: "DateOfRecord")
     }
     
     private func disableButtons() {
@@ -148,12 +109,71 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
 }
 
-//struct ViewModel {
-//    let image: UIImage
-//    let question: String
-//    let questionNumber: String
+// MARK: - QuestionFactoryDelegate
+
+extension MovieQuizViewController: QuestionFactoryDelegate {
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else {return}
+        currentQuestion = question
+        let convertedData = convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+            self?.show(quiz: convertedData)
+        }
+    }
+}
+
+// MARK: - AlertPresenterDelegate
+
+extension MovieQuizViewController: AlertPresenterDelegate {
+    func showQuizRezult() {
+        DispatchQueue.main.async { [weak self] in
+            self?.currentQuestionIndex = 0
+            self?.correctAnswersCounter = 0
+            self?.questionFactory?.requestQuestion()
+        }
+    }
+}
+
+// MARK: - previous funcs
+//private func showNextQuestionOrResult() {
+//    if currentQuestionIndex == questionAmount - 1 {
+//        let record = checkIfTheRecordIsHighest(correctAnswers: correctAnswersCounter)
+//        let gamePlayed = increaseGamePlayedCounter()
+//        let dateOfRecord = defaults.string(forKey: "DateOfRecord") ?? "current"
+//        let quizResult = AlertModel(title: "Этот раунд окончен!", message: "Ваш результат: \(correctAnswersCounter) из \(questionAmount) \nРекорд: \(record) (\(dateOfRecord)) \nИгры: \(gamePlayed)", buttonText: "Сыграть еще раз!")
+//        alertPresenter?.show(quiz: quizResult)
+//    } else {
+//        currentQuestionIndex += 1
+//        questionFactory?.requestQuestion()
+//        enableButtons()
+//    }
 //}
 
+//private func checkIfTheRecordIsHighest(correctAnswers: Int) -> Int {
+//    let userRecord = defaults.integer(forKey: "UserRecord")
+//    if correctAnswers > userRecord {
+//        defaults.set(correctAnswers, forKey: "UserRecord")
+//        setDateAndTimeOfRecord()
+//        return correctAnswers
+//    } else {
+//        return userRecord
+//    }
+//}
+
+//private func increaseGamePlayedCounter() -> Int {
+//    var gamePlayed = defaults.integer(forKey: "GamePlayed")
+//    gamePlayed += 1
+//    defaults.set(gamePlayed, forKey: "GamePlayed")
+//    return gamePlayed
+//}
+//
+//private func setDateAndTimeOfRecord() {
+//    let currentDate = Date()
+//    let dateFormatter = DateFormatter()
+//    dateFormatter.dateFormat = "dd.MM.yyyy HH:mm"
+//    let dateToString = dateFormatter.string(from: currentDate)
+//    defaults.set(dateToString, forKey: "DateOfRecord")
+//}
 
 /*
  Mock-данные
