@@ -87,7 +87,7 @@ final class StatisticServiceImplementation: StatisticService {
     }
     
     private func currentResultIsHigherThanRecord(current result: GameRecord) -> Bool {
-        return gameRecord.correct < result.correct
+        return gameRecord < result
     }
     
     private enum Keys: String {
