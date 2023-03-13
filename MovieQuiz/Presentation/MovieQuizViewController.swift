@@ -6,7 +6,6 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
     @IBOutlet private weak var textLabel: UILabel!
-
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     
@@ -20,33 +19,28 @@ final class MovieQuizViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        imageView.layer.masksToBounds = true
+        imageView.layer.cornerRadius = 20
         questionFactory = QuestionFactory(delegate: self)
         alertPresenter = AlertPresenter(delegate: self)
         statisticService = StatisticServiceImplementation()
-        imageView.layer.cornerRadius = 8
         questionFactory?.requestQuestion()
     }
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
         disableButtons()
         let userAnswer = false
-        guard let currentQuestion = currentQuestion else {return}
+        guard let currentQuestion = currentQuestion else { return }
         showAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
     }
     
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
         disableButtons()
         let userAnswer = true
-        guard let currentQuestion = currentQuestion else {return}
+        guard let currentQuestion = currentQuestion else { return }
         showAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
     }
-    
-    private func makeImageRoundAndCreateBorder() {
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 5
-        imageView.layer.cornerRadius = 8
-    }
-    
+
     private func disableButtons() {
         noButton.isEnabled = false
         yesButton.isEnabled = false
@@ -61,9 +55,8 @@ final class MovieQuizViewController: UIViewController {
 // MARK: - QuestionFactoryDelegate
 
 extension MovieQuizViewController: QuestionFactoryDelegate {
-    
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {return}
+        guard let question = question else { return }
         currentQuestion = question
         let convertedData = convert(model: question)
         DispatchQueue.main.async { [weak self] in
@@ -85,7 +78,7 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
     }
     
     private func showAnswerResult(isCorrect: Bool) {
-        makeImageRoundAndCreateBorder()
+        imageView.layer.borderWidth = 8
         
         if isCorrect {
             imageView.layer.borderColor = UIColor.ypGreen.cgColor
@@ -95,12 +88,12 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            guard let self = self else {return}
+            guard let self = self else { return }
             self.imageView.layer.borderWidth = 0
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            guard let self = self else {return}
+            guard let self = self else { return }
             self.showNextQuestionOrResult()
         }
     }
@@ -111,10 +104,17 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
                                     total: questionAmount,
                                     date: Date())
             statisticService?.store(current: result)
-            guard let record = statisticService?.gameRecord,
-                  let gamePlayed = statisticService?.gamesPlayed,
-                  let totalAccuracy = statisticService?.totalAccuracy else {return}
-            let quizResult = AlertModel(title: "Этот раунд окончен!", message: "Ваш результат: \(correctAnswersCounter) из \(questionAmount)\nКоличество сыгранных квизов: \(gamePlayed)\nРекорд: \(record.correct)/\(record.total) (\(record.date.dateTimeString)) \nCредняя точность: \(totalAccuracy)%", buttonText: "Сыграть еще раз!")
+            guard let statisticService else { return }
+            let record = statisticService.gameRecord
+            let quizResult = AlertModel(title: "Этот раунд окончен!",
+                                        message: """
+                                        Ваш результат: \(correctAnswersCounter) из \(questionAmount)
+                                        Количество сыгранных квизов: \(statisticService.gamesPlayed)
+                                        Рекорд:\
+                                        \(record.correct)/\(record.total) (\(record.date.dateTimeString))
+                                        Cредняя точность: \(statisticService.totalAccuracy)%
+                                        """,
+                                        buttonText: "Сыграть еще раз!")
             alertPresenter?.show(quiz: quizResult)
         } else {
             currentQuestionIndex += 1
@@ -126,7 +126,6 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
 // MARK: - AlertPresenterDelegate
 
 extension MovieQuizViewController: AlertPresenterDelegate {
-    
     func showQuizRezult() {
         DispatchQueue.main.async { [weak self] in
             self?.currentQuestionIndex = 0

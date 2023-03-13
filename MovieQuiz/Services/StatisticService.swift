@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol StatisticService {
+protocol StatisticService: AnyObject {
     func store(current result: GameRecord)
     var totalAccuracy: Double { get }
     var totalCorrectAnswers: Int { get }
@@ -17,7 +17,6 @@ protocol StatisticService {
 }
 
 final class StatisticServiceImplementation: StatisticService {
-    
     private let userDefaults = UserDefaults.standard
     var totalAccuracy: Double {
         get {
@@ -29,37 +28,31 @@ final class StatisticServiceImplementation: StatisticService {
             return 0.0
         }
     }
-    
     var totalCorrectAnswers: Int {
         get {
-            let totalCorrect = userDefaults.integer(forKey: Keys.correct.rawValue)
-            return totalCorrect
+            userDefaults.integer(forKey: Keys.correct.rawValue)
         }
         set {
             userDefaults.set(newValue, forKey: Keys.correct.rawValue)
         }
     }
-    
     var totalQuestions: Int {
         get {
-            let totalQuestionsCount = userDefaults.integer(forKey: Keys.total.rawValue)
-            return totalQuestionsCount
+            userDefaults.integer(forKey: Keys.total.rawValue)
+            
         }
         set {
             userDefaults.set(newValue, forKey: Keys.total.rawValue)
         }
     }
-    
     var gamesPlayed: Int {
         get {
-            let games = userDefaults.integer(forKey: Keys.gamesCount.rawValue)
-            return games
+            userDefaults.integer(forKey: Keys.gamesCount.rawValue)
         }
         set {
             userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
         }
     }
-    
     var gameRecord: GameRecord {
         get {
             guard let data = userDefaults.data(forKey: Keys.gameRecord.rawValue),
