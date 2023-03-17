@@ -74,8 +74,7 @@ final class StatisticServiceImplementation: StatisticService {
         totalQuestions += 1
         gamesPlayed += 1
         if currentResultIsHigherThanRecord(current: result) {
-            let record = GameRecord(correct: result.correct, total: result.total, date: result.date)
-            gameRecord = record
+            gameRecord = result
         }
     }
     
