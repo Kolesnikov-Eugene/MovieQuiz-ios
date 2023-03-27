@@ -117,13 +117,18 @@
                                     </stackView>
                                 </subviews>
                             </stackView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="qCV-wC-Pde">
+                                <rect key="frame" x="186.66666666666666" y="416" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="ypBlack"/>
                         <constraints>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="SrN-b1-yfz" secondAttribute="trailing" constant="20" id="6r8-8n-4ny"/>
                             <constraint firstItem="SrN-b1-yfz" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="RsK-rW-ViX"/>
+                            <constraint firstItem="qCV-wC-Pde" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="ai2-WM-imS"/>
                             <constraint firstItem="SrN-b1-yfz" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="hjY-F4-UPU"/>
+                            <constraint firstItem="qCV-wC-Pde" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="phv-6d-QVA"/>
                         </constraints>
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
@@ -132,6 +137,7 @@
                         </userDefinedRuntimeAttributes>
                     </view>
                     <connections>
+                        <outlet property="activityIndicator" destination="qCV-wC-Pde" id="Bwp-Ws-mJ9"/>
                         <outlet property="counterLabel" destination="HbW-NK-6Mh" id="OX8-Cl-wA7"/>
                         <outlet property="imageView" destination="EOH-Ga-4oq" id="rZD-9F-Bnu"/>
                         <outlet property="noButton" destination="QGC-vG-6kP" id="y3Z-uN-ule"/>
