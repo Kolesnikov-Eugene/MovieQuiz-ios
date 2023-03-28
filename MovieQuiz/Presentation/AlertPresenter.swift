@@ -8,23 +8,23 @@
 import UIKit
 
 class AlertPresenter {
-    weak var delegate: AlertPresenterDelegate?
+    weak var vc: UIViewController?
     
-    init(delegate: AlertPresenterDelegate) {
-        self.delegate = delegate
+    init(vc: UIViewController) {
+        self.vc = vc
     }
     
-    func show(quiz result: AlertModel) {
-        let alert = UIAlertController(title: result.title,
-                                      message: result.message,
+    func show(alert message: AlertModel) {
+        let alert = UIAlertController(title: message.title,
+                                      message: message.message,
                                       preferredStyle: .alert)
         
-        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            self?.delegate?.showQuizRezult()
+        let action = UIAlertAction(title: message.buttonText, style: .default) { _ in
+            message.completion()
         }
         
         alert.addAction(action)
         
-        delegate?.present(alert, animated: true, completion: nil)
+        vc?.present(alert, animated: true, completion: nil)
     }
 }

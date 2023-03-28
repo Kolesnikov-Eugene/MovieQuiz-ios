@@ -21,7 +21,7 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.masksToBounds = true
         imageView.layer.cornerRadius = 20
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        alertPresenter = AlertPresenter(delegate: self)
+        alertPresenter = AlertPresenter(vc: self)
         statisticService = StatisticServiceImplementation()
         showLoadingIndicator()
         questionFactory?.loadData()
@@ -53,21 +53,14 @@ final class MovieQuizViewController: UIViewController {
     private func showNetworkError(message: String) {
         let model = AlertModel(title: "Ошибка",
                                message: message,
-                               buttonText: "Попробовать еще раз")
-        let alert = UIAlertController(title: model.title,
-                                      message: model.message,
-                                      preferredStyle: .alert)
-        let action = UIAlertAction(title: model.buttonText,
-                                   style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            
+                               buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self else { return }
             self.currentQuestionIndex = 0
             self.correctAnswersCounter = 0
             
             self.questionFactory?.loadData()
         }
-        alert.addAction(action)
-        self.present(alert, animated: true, completion: nil)
+        alertPresenter?.show(alert: model)
     }
 
     private func disableButtons() {
@@ -154,23 +147,17 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
                                         \(record.correct)/\(record.total) (\(record.date.dateTimeString))
                                         Cредняя точность: \(statisticService.totalAccuracy)%
                                         """,
-                                        buttonText: "Сыграть еще раз!")
-            alertPresenter?.show(quiz: quizResult)
+                                        buttonText: "Сыграть еще раз!") {
+                DispatchQueue.main.async { [weak self] in
+                    self?.currentQuestionIndex = 0
+                    self?.correctAnswersCounter = 0
+                    self?.questionFactory?.requestQuestion()
+                }
+            }
+            alertPresenter?.show(alert: quizResult)
         } else {
             currentQuestionIndex += 1
             questionFactory?.requestQuestion()
-        }
-    }
-}
-
-// MARK: - AlertPresenterDelegate
-
-extension MovieQuizViewController: AlertPresenterDelegate {
-    func showQuizRezult() {
-        DispatchQueue.main.async { [weak self] in
-            self?.currentQuestionIndex = 0
-            self?.correctAnswersCounter = 0
-            self?.questionFactory?.requestQuestion()
         }
     }
 }

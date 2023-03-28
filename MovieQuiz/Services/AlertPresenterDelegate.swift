@@ -7,6 +7,6 @@
 
 import UIKit
 
-protocol AlertPresenterDelegate: UIViewController {
-    func showQuizRezult()
-}
+//protocol AlertPresenterDelegate: UIViewController {
+//    func showQuizRezult()
+//}
