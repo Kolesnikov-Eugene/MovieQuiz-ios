@@ -49,19 +49,6 @@ final class MovieQuizViewController: UIViewController {
     private func hideLoadingIndicator() {
         activityIndicator.isHidden = true
     }
-    
-    private func showNetworkError(message: String) {
-        let model = AlertModel(title: "Ошибка",
-                               message: message,
-                               buttonText: "Попробовать еще раз") { [weak self] in
-            guard let self else { return }
-            self.currentQuestionIndex = 0
-            self.correctAnswersCounter = 0
-            
-            self.questionFactory?.loadData()
-        }
-        alertPresenter?.show(alert: model)
-    }
 
     private func disableButtons() {
         noButton.isEnabled = false
@@ -95,12 +82,23 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
         }
     }
     
+    private func showNetworkError(message: String) {
+        let model = AlertModel(title: "Ошибка",
+                               message: message,
+                               buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self else { return }
+            self.currentQuestionIndex = 0
+            self.correctAnswersCounter = 0
+            self.questionFactory?.loadData()
+        }
+        alertPresenter?.show(alert: model)
+    }
+    
     private func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         counterLabel.text = step.questionNumber
         textLabel.text = step.question
         enableButtons()
-//        hideLoadingIndicator()
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {

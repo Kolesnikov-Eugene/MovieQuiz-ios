@@ -22,7 +22,6 @@ class AlertPresenter {
         let action = UIAlertAction(title: message.buttonText, style: .default) { _ in
             message.completion()
         }
-        
         alert.addAction(action)
         
         vc?.present(alert, animated: true, completion: nil)
