@@ -39,7 +39,6 @@ final class StatisticServiceImplementation: StatisticService {
     var totalQuestions: Int {
         get {
             userDefaults.integer(forKey: Keys.total.rawValue)
-            
         }
         set {
             userDefaults.set(newValue, forKey: Keys.total.rawValue)
