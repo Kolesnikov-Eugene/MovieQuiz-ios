@@ -22,22 +22,21 @@ final class MovieQuizViewController: UIViewController {
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         alertPresenter = AlertPresenter(vc: self)
         statisticService = StatisticServiceImplementation()
+        presenter.vc = self
         showLoadingIndicator()
         questionFactory?.loadData()
     }
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
         disableButtons()
-        let userAnswer = false
-        guard let currentQuestion = currentQuestion else { return }
-        showAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonPressed()
     }
     
     @IBAction private func yesButtonPressed(_ sender: UIButton) {
         disableButtons()
-        let userAnswer = true
-        guard let currentQuestion = currentQuestion else { return }
-        showAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonPressed()
     }
     
     private func showLoadingIndicator() {
@@ -49,12 +48,12 @@ final class MovieQuizViewController: UIViewController {
         activityIndicator.isHidden = true
     }
 
-    private func disableButtons() {
+    func disableButtons() {
         noButton.isEnabled = false
         yesButton.isEnabled = false
     }
     
-    private func enableButtons() {
+    func enableButtons() {
         noButton.isEnabled = true
         yesButton.isEnabled = true
     }
@@ -100,7 +99,7 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
         enableButtons()
     }
     
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         imageView.layer.borderWidth = 8
         
         if isCorrect {
