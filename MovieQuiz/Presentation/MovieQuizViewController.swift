@@ -7,14 +7,13 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
-    
-    private var currentQuestionIndex: Int = 0
+
     private var correctAnswersCounter: Int = 0
-    private let questionAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var alertPresenter: AlertPresenter?
     private var statisticService: StatisticService?
+    private var presenter = MovieQuizPresenter()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -76,7 +75,7 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { return }
         currentQuestion = question
-        let convertedData = convert(model: question)
+        let convertedData = presenter.convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: convertedData)
         }
@@ -87,7 +86,7 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
                                message: message,
                                buttonText: "Попробовать еще раз") { [weak self] in
             guard let self else { return }
-            self.currentQuestionIndex = 0
+            self.presenter.resetQuestionIndex()
             self.correctAnswersCounter = 0
             self.questionFactory?.loadData()
         }
@@ -99,13 +98,6 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
         counterLabel.text = step.questionNumber
         textLabel.text = step.question
         enableButtons()
-    }
-    
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        return QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionAmount)")
     }
     
     private func showAnswerResult(isCorrect: Bool) {
@@ -130,16 +122,16 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
     }
     
     private func showNextQuestionOrResult() {
-        if currentQuestionIndex == questionAmount - 1 {
+        if presenter.isLastQuestion() {
             let result = GameRecord(correct: correctAnswersCounter,
-                                    total: questionAmount,
+                                    total: presenter.questionAmount,
                                     date: Date())
             statisticService?.store(current: result)
             guard let statisticService else { return }
             let record = statisticService.gameRecord
             let quizResult = AlertModel(title: "Этот раунд окончен!",
                                         message: """
-                                        Ваш результат: \(correctAnswersCounter) из \(questionAmount)
+                                        Ваш результат: \(correctAnswersCounter) из \(presenter.questionAmount)
                                         Количество сыгранных квизов: \(statisticService.gamesPlayed)
                                         Рекорд:\
                                         \(record.correct)/\(record.total) (\(record.date.dateTimeString))
@@ -147,14 +139,14 @@ extension MovieQuizViewController: QuestionFactoryDelegate {
                                         """,
                                         buttonText: "Сыграть еще раз!") {
                 DispatchQueue.main.async { [weak self] in
-                    self?.currentQuestionIndex = 0
+                    self?.presenter.resetQuestionIndex()
                     self?.correctAnswersCounter = 0
                     self?.questionFactory?.requestQuestion()
                 }
             }
             alertPresenter?.show(alert: quizResult)
         } else {
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             questionFactory?.requestQuestion()
         }
     }
