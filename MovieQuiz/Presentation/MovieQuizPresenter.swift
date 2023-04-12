@@ -33,14 +33,18 @@ final class MovieQuizPresenter {
         didAnswer(isYes: true)
     }
     
-    private func isLastQuestion() -> Bool {
-        return currentQuestionIndex == questionAmount - 1
-    }
-    
     func resetartGame() {
         currentQuestionIndex = 0
         correctAnswersCounter = 0
         questionFactory?.requestQuestion()
+    }
+    
+    func reloadData() {
+        questionFactory?.loadData()
+    }
+    
+    private func isLastQuestion() -> Bool {
+        return currentQuestionIndex == questionAmount - 1
     }
     
     private func switchToNextQuestion() {
@@ -64,34 +68,6 @@ final class MovieQuizPresenter {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionAmount)")
     }
     
-    private func proceedToNextQuestionOrResult() {
-        if isLastQuestion() {
-            let result = GameRecord(correct: correctAnswersCounter,
-                                    total: questionAmount,
-                                    date: Date())
-            statisticService?.store(current: result)
-            guard let statisticService else { return }
-            let record = statisticService.gameRecord
-            let quizResult = AlertModel(title: "Этот раунд окончен!",
-                                        message: """
-                                        Ваш результат: \(correctAnswersCounter) из \(questionAmount)
-                                        Количество сыгранных квизов: \(statisticService.gamesPlayed)
-                                        Рекорд:\
-                                        \(record.correct)/\(record.total) (\(record.date.dateTimeString))
-                                        Cредняя точность: \(statisticService.totalAccuracy)%
-                                        """,
-                                        buttonText: "Сыграть еще раз!") {
-                DispatchQueue.main.async {
-                    self.resetartGame()
-                }
-            }
-            vc?.showGameResult(game: quizResult)
-        } else {
-            switchToNextQuestion()
-            questionFactory?.requestQuestion()
-        }
-    }
-    
     private func proceedWithAnswerResult(isCorrect: Bool) {
         if isCorrect {
             increaseCorrectAnswersCounter()
@@ -108,6 +84,35 @@ final class MovieQuizPresenter {
             guard let self = self else { return }
             self.proceedToNextQuestionOrResult()
         }
+    }
+    
+    private func proceedToNextQuestionOrResult() {
+        if isLastQuestion() {
+            let result = GameRecord(correct: correctAnswersCounter,
+                                    total: questionAmount,
+                                    date: Date())
+            statisticService.store(current: result)
+            
+            let quizResult = createQuizResult()
+            vc?.showGameResult(for: quizResult)
+        } else {
+            switchToNextQuestion()
+            questionFactory?.requestQuestion()
+        }
+    }
+    
+    private func createQuizResult() -> QuizResultsViewModel {
+        let record = statisticService.gameRecord
+        let quizResult = QuizResultsViewModel(title: "Этот раунд окончен!",
+                                    text: """
+                                    Ваш результат: \(correctAnswersCounter) из \(questionAmount)
+                                    Количество сыгранных квизов: \(statisticService.gamesPlayed)
+                                    Рекорд:\
+                                    \(record.correct)/\(record.total) (\(record.date.dateTimeString))
+                                    Cредняя точность: \(statisticService.totalAccuracy)%
+                                    """,
+                                    buttonText: "Сыграть еще раз!")
+        return quizResult
     }
 }
 

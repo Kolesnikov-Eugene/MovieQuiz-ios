@@ -28,24 +28,24 @@ final class MovieQuizViewController: UIViewController {
         disableButtons()
         presenter.yesButtonPressed()
     }
-    
-    func showLoadingIndicator() {
-        activityIndicator.isHidden = false
-        activityIndicator.startAnimating()
-    }
-    
-    func hideLoadingIndicator() {
-        activityIndicator.isHidden = true
-    }
 
-    func disableButtons() {
+    private func disableButtons() {
         noButton.isEnabled = false
         yesButton.isEnabled = false
     }
     
-    func enableButtons() {
+    private func enableButtons() {
         noButton.isEnabled = true
         yesButton.isEnabled = true
+    }
+    
+    private func hideLoadingIndicator() {
+        activityIndicator.isHidden = true
+    }
+    
+    func showLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
     }
     
     func show(quiz step: QuizStepViewModel) {
@@ -70,12 +70,19 @@ final class MovieQuizViewController: UIViewController {
                                message: message,
                                buttonText: "Попробовать еще раз") { [weak self] in
             guard let self else { return }
-            self.presenter.resetartGame()
+            self.presenter.reloadData()
         }
         alertPresenter?.show(alert: model)
     }
     
-    func showGameResult(game result: AlertModel) {
-        alertPresenter?.show(alert: result)
+    func showGameResult(for gameResult: QuizResultsViewModel) {
+        let model = AlertModel(title: gameResult.title,
+                               message: gameResult.text,
+                               buttonText: gameResult.buttonText) {
+            DispatchQueue.main.async {
+                self.presenter.resetartGame()
+            }
+        }
+        alertPresenter?.show(alert: model)
     }
 }
