@@ -7,7 +7,7 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
-
+    
     private var presenter: MovieQuizPresenter!
     private var alertPresenter: AlertPresenter?
     
@@ -28,7 +28,7 @@ final class MovieQuizViewController: UIViewController {
         disableButtons()
         presenter.yesButtonPressed()
     }
-
+    
     private func disableButtons() {
         noButton.isEnabled = false
         yesButton.isEnabled = false
@@ -38,8 +38,10 @@ final class MovieQuizViewController: UIViewController {
         noButton.isEnabled = true
         yesButton.isEnabled = true
     }
-    
-    private func hideLoadingIndicator() {
+}
+
+extension MovieQuizViewController: MovieQuizViewControllerProtocol {
+    func hideLoadingIndicator() {
         activityIndicator.isHidden = true
     }
     

@@ -8,7 +8,7 @@
 import UIKit
 
 final class MovieQuizPresenter {
-    private weak var vc: MovieQuizViewController?
+    private weak var vc: MovieQuizViewControllerProtocol?
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var statisticService: StatisticService!
@@ -16,7 +16,7 @@ final class MovieQuizPresenter {
     private var correctAnswersCounter = 0
     private let questionAmount: Int = 10
     
-    init(vc: MovieQuizViewController) {
+    init(vc: MovieQuizViewControllerProtocol) {
         self.vc = vc
         
         statisticService = StatisticServiceImplementation()
@@ -61,7 +61,7 @@ final class MovieQuizPresenter {
         proceedWithAnswerResult(isCorrect: userAnswer == currentQuestion.correctAnswer)
     }
     
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
+    func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
@@ -119,7 +119,7 @@ final class MovieQuizPresenter {
 // MARK: - QuestionFactoryDelegate
 extension MovieQuizPresenter: QuestionFactoryDelegate {
     func didLoadDataFromServer() {
-        vc?.activityIndicator.isHidden = true
+        vc?.hideLoadingIndicator()
         questionFactory?.requestQuestion()
     }
     
