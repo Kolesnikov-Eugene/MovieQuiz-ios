@@ -69,8 +69,8 @@ final class StatisticServiceImplementation: StatisticService {
     }
     
     func store(current result: GameRecord) {
-        totalCorrectAnswers += 1
-        totalQuestions += 1
+        totalCorrectAnswers += result.correct
+        totalQuestions += result.total
         gamesPlayed += 1
         if currentResultIsHigherThanRecord(current: result) {
             gameRecord = result
