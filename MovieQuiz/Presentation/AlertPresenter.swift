@@ -8,10 +8,10 @@
 import UIKit
 
 class AlertPresenter {
-    weak var vc: UIViewController?
+    weak var viewController: UIViewController?
     
-    init(vc: UIViewController) {
-        self.vc = vc
+    init(viewController: UIViewController) {
+        self.viewController = viewController
     }
     
     func show(alert message: AlertModel) {
@@ -24,6 +24,6 @@ class AlertPresenter {
         }
         alert.addAction(action)
             
-        vc?.present(alert, animated: true, completion: nil)
+        viewController?.present(alert, animated: true, completion: nil)
     }
 }

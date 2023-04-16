@@ -30,7 +30,7 @@ final class MovieQuizUITests: XCTestCase {
         let firstPoster = app.images["Poster"]
         let firstPosterData = firstPoster.screenshot().pngRepresentation
         app.buttons["Yes"].tap()
-        sleep(3)
+        sleep(1)
         let secondPoster = app.images["Poster"]
         let secondPosterData = secondPoster.screenshot().pngRepresentation
         
@@ -43,7 +43,7 @@ final class MovieQuizUITests: XCTestCase {
         let firstPostetData = firstPoster.screenshot().pngRepresentation
         
         app.buttons["No"].tap()
-        sleep(3)
+        sleep(1)
         
         let secondPoster = app.images["Poster"]
         let secondPosterData = secondPoster.screenshot().pngRepresentation
@@ -56,7 +56,7 @@ final class MovieQuizUITests: XCTestCase {
         var taps = 0
         while taps < 10 {
             app.buttons["Yes"].tap()
-            sleep(3)
+            sleep(1)
             taps += 1
         }
         sleep(3)
@@ -72,7 +72,7 @@ final class MovieQuizUITests: XCTestCase {
         var taps = 0
         while taps < 10 {
             app.buttons["Yes"].tap()
-            sleep(3)
+            sleep(1)
             taps += 1
         }
         sleep(3)

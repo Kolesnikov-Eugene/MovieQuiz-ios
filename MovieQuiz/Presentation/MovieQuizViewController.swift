@@ -15,8 +15,8 @@ final class MovieQuizViewController: UIViewController {
         super.viewDidLoad()
         imageView.layer.masksToBounds = true
         imageView.layer.cornerRadius = 20
-        alertPresenter = AlertPresenter(vc: self)
-        presenter = MovieQuizPresenter(vc: self)
+        alertPresenter = AlertPresenter(viewController: self)
+        presenter = MovieQuizPresenter(viewController: self)
     }
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {
@@ -42,12 +42,12 @@ final class MovieQuizViewController: UIViewController {
 
 extension MovieQuizViewController: MovieQuizViewControllerProtocol {
     func hideLoadingIndicator() {
-        activityIndicator.isHidden = true
+        activityIndicator.stopAnimating()
     }
     
     func showLoadingIndicator() {
-        activityIndicator.isHidden = false
         activityIndicator.startAnimating()
+        activityIndicator.hidesWhenStopped = true
     }
     
     func show(quiz step: QuizStepViewModel) {

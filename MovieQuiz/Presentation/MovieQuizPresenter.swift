@@ -8,7 +8,7 @@
 import UIKit
 
 final class MovieQuizPresenter {
-    private weak var vc: MovieQuizViewControllerProtocol?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var statisticService: StatisticService!
@@ -16,13 +16,13 @@ final class MovieQuizPresenter {
     private var correctAnswersCounter = 0
     private let questionAmount: Int = 10
     
-    init(vc: MovieQuizViewControllerProtocol) {
-        self.vc = vc
+    init(viewController: MovieQuizViewControllerProtocol) {
+        self.viewController = viewController
         
         statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
-        vc.showLoadingIndicator()
+        viewController.showLoadingIndicator()
     }
     
     func noButtonPressed() {
@@ -73,11 +73,11 @@ final class MovieQuizPresenter {
             increaseCorrectAnswersCounter()
         }
         
-        vc?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             guard let self = self else { return }
-            self.vc?.hideImageBorder()
+            self.viewController?.hideImageBorder()
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
@@ -94,9 +94,10 @@ final class MovieQuizPresenter {
             statisticService.store(current: result)
             
             let quizResult = createQuizResult()
-            vc?.showGameResult(for: quizResult)
+            viewController?.showGameResult(for: quizResult)
         } else {
             switchToNextQuestion()
+            viewController?.showLoadingIndicator() // проверить работе метода
             questionFactory?.requestQuestion()
         }
     }
@@ -119,20 +120,21 @@ final class MovieQuizPresenter {
 // MARK: - QuestionFactoryDelegate
 extension MovieQuizPresenter: QuestionFactoryDelegate {
     func didLoadDataFromServer() {
-        vc?.hideLoadingIndicator()
+//        viewController?.hideLoadingIndicator() // переместить метод в другое место ?
         questionFactory?.requestQuestion()
     }
     
     func didFailToLoadData(with error: Error) {
-        vc?.showNetworkError(message: error.localizedDescription)
+        viewController?.showNetworkError(message: error.localizedDescription)
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
+        viewController?.hideLoadingIndicator() // посмотреть как отработает метод
         guard let question = question else { return }
         currentQuestion = question
         let convertedData = convert(model: question)
         DispatchQueue.main.async { [weak self] in
-            self?.vc?.show(quiz: convertedData)
+            self?.viewController?.show(quiz: convertedData)
         }
     }
 }
