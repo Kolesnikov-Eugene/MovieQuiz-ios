@@ -11,6 +11,8 @@ class QuestionFactory: QuestionFactoryProtocol {
     private let moviesLoader: MoviesLoading
     private weak var delegate: QuestionFactoryDelegate?
     private var movies: [MostPopularMovie] = []
+    private var questionWord: QuestionWord?
+    private var correctAnswer = false
     
     init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate) {
         self.moviesLoader = moviesLoader
@@ -49,20 +51,60 @@ class QuestionFactory: QuestionFactoryProtocol {
                     self.delegate?.didFailToLoadData(with: error)
                 }
             }
-            
-            let rating = Float(movie.rating) ?? 0
-            
-            let text = "Рейтинг этого фильма больше чем 7?"
-            let correctAnswer = rating > 7
-            
-            let question = QuizQuestion(image: imageData,
-                                        text: text,
-                                        correctAnswer: correctAnswer)
+
+            let question = self.questionGenerator(for: movie, image: imageData)
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.didReceiveNextQuestion(question: question)
             }
         }
+    }
+    
+    private func questionGenerator(for movieLoaded: MostPopularMovie, image: Data) -> QuizQuestion {
+        let rating = Float(movieLoaded.rating) ?? 0
+        let ratingToShow = generateRatingToShow()
+        
+        if ratingToShow != rating {
+            questionWord = QuestionWord.allCases.randomElement()
+            switch questionWord {
+            case .lesser:
+                correctAnswer = ratingToShow > rating
+            case .greater:
+                correctAnswer = ratingToShow < rating
+            case .equal:
+                correctAnswer = ratingToShow == rating
+            case .none:
+                print("unable")
+            }
+        } else {
+            questionWord = QuestionWord.equal
+            correctAnswer = ratingToShow == rating
+        }
+
+        let comparisonText = questionWord?.rawValue ?? ""
+        
+        print("rating: \(rating)\nRatingToShow: \(ratingToShow)\nCorrect: \(correctAnswer)")
+
+        let questionText = "Рейтинг этого фильма \(comparisonText) \(ratingToShow)?"
+        
+        let question = QuizQuestion(image: image,
+                                    text: questionText,
+                                    correctAnswer: correctAnswer)
+
+        return question
+    }
+    
+    private func generateRatingToShow() -> Float {
+        let newRating = Float.random(in: 7.5...9.5)
+        let ratingToString = String(format: "%.1f", newRating)
+        let ratingToFloat = Float(ratingToString) ?? 0
+        return ratingToFloat
+    }
+    
+    private enum QuestionWord: String, CaseIterable {
+        case lesser = "меньше чем"
+        case greater = "больше чем"
+        case equal = "равeн"
     }
 }
