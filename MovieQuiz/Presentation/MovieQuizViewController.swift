@@ -17,6 +17,7 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.cornerRadius = 20
         alertPresenter = AlertPresenter(viewController: self)
         presenter = MovieQuizPresenter(viewController: self)
+        disableButtons()
     }
     
     @IBAction private func noButtonPressed(_ sender: UIButton) {

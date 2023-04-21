@@ -52,7 +52,7 @@ class QuestionFactory: QuestionFactoryProtocol {
                 }
             }
 
-            let question = self.questionGenerator(for: movie, image: imageData)
+            let question = self.ganerateQuestion(for: movie, with: imageData)
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -61,32 +61,32 @@ class QuestionFactory: QuestionFactoryProtocol {
         }
     }
     
-    private func questionGenerator(for movieLoaded: MostPopularMovie, image: Data) -> QuizQuestion {
+    private func ganerateQuestion(for movieLoaded: MostPopularMovie, with image: Data) -> QuizQuestion {
         let rating = Float(movieLoaded.rating) ?? 0
-        let ratingToShow = generateRatingToShow()
+        let randomRatingToShow = generateRandomRatingToShow()
         
-        if ratingToShow != rating {
+        if randomRatingToShow != rating {
             questionWord = QuestionWord.allCases.randomElement()
             switch questionWord {
             case .lesser:
-                correctAnswer = ratingToShow > rating
+                correctAnswer = randomRatingToShow > rating
             case .greater:
-                correctAnswer = ratingToShow < rating
+                correctAnswer = randomRatingToShow < rating
             case .equal:
-                correctAnswer = ratingToShow == rating
+                correctAnswer = randomRatingToShow == rating
             case .none:
                 print("unable")
             }
         } else {
             questionWord = QuestionWord.equal
-            correctAnswer = ratingToShow == rating
+            correctAnswer = randomRatingToShow == rating
         }
 
-        let comparisonText = questionWord?.rawValue ?? ""
+        let questionWordToShow = questionWord?.rawValue ?? ""
         
-        print("rating: \(rating)\nRatingToShow: \(ratingToShow)\nCorrect: \(correctAnswer)")
+        print("rating: \(rating)\nRatingToShow: \(randomRatingToShow)\nCorrect: \(correctAnswer)")
 
-        let questionText = "Рейтинг этого фильма \(comparisonText) \(ratingToShow)?"
+        let questionText = "Рейтинг этого фильма \(questionWordToShow) \(randomRatingToShow)?"
         
         let question = QuizQuestion(image: image,
                                     text: questionText,
@@ -95,11 +95,11 @@ class QuestionFactory: QuestionFactoryProtocol {
         return question
     }
     
-    private func generateRatingToShow() -> Float {
-        let newRating = Float.random(in: 7.5...9.5)
-        let ratingToString = String(format: "%.1f", newRating)
-        let ratingToFloat = Float(ratingToString) ?? 0
-        return ratingToFloat
+    private func generateRandomRatingToShow() -> Float {
+        let randomRating = Float.random(in: 7.5...9.5)
+        let randomRatingToString = String(format: "%.1f", randomRating)
+        let randomRatingToFloat = Float(randomRatingToString) ?? 0
+        return randomRatingToFloat
     }
     
     private enum QuestionWord: String, CaseIterable {
